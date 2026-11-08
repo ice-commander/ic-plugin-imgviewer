@@ -100,7 +100,14 @@ fn length_of(source: IcFsSource, path: &str) -> u64 {
     let Ok(named) = CString::new(path) else {
         return 0;
     };
-    let stream = unsafe { ((*host).fs_open)(source, named.as_ptr(), IC_OPEN_READ) };
+    let stream = unsafe {
+        ((*host).fs_open)(
+            source,
+            named.as_ptr(),
+            IC_OPEN_READ,
+            ic_plugin_api::IC_SIZE_UNKNOWN,
+        )
+    };
     if stream.is_null() {
         return 0;
     }
@@ -149,7 +156,14 @@ fn read_whole(source: IcFsSource, name: &str) -> Option<Vec<u8>> {
     if host.is_null() {
         return None;
     }
-    let stream = unsafe { ((*host).fs_open)(source, named.as_ptr(), IC_OPEN_READ) };
+    let stream = unsafe {
+        ((*host).fs_open)(
+            source,
+            named.as_ptr(),
+            IC_OPEN_READ,
+            ic_plugin_api::IC_SIZE_UNKNOWN,
+        )
+    };
     if stream.is_null() {
         return None;
     }
@@ -541,7 +555,12 @@ mod tests {
         HOST.store(0, Ordering::Relaxed);
     }
 
-    extern "C" fn never_opens(_: IcFsSource, _: *const c_char, _: u32) -> ic_plugin_api::IcStream {
+    extern "C" fn never_opens(
+        _: IcFsSource,
+        _: *const c_char,
+        _: u32,
+        _: u64,
+    ) -> ic_plugin_api::IcStream {
         std::ptr::null_mut()
     }
 
